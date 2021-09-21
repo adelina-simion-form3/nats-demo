@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"log"
-	"runtime"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
@@ -44,14 +44,16 @@ func main() {
 		sub.Drain()
 	}()
 
-	msgs, err := sub.Fetch(3)
-	if err != nil {
-		log.Fatal("error fetching message from pull subscriber", err)
+	for {
+		msgs, err := sub.Fetch(3)
+		if err != nil {
+			log.Fatal("error fetching message from pull subscriber", err)
+		}
+		for _, m := range msgs {
+			scount++
+			log.Printf("[%d] received from %s: %s\n", scount, m.Subject, string(m.Data))
+		}
+		// Poll every 2 second
+		time.Sleep(2 * time.Second)
 	}
-	for _, m := range msgs {
-		scount++
-		log.Printf("[%d] received from %s: %s\n", scount, m.Subject, string(m.Data))
-	}
-
-	runtime.Goexit()
 }

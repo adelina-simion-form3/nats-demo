@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"time"
@@ -12,12 +11,10 @@ import (
 )
 
 const maxMessages = 500
+const subject = "payments.uk"
 
 func main() {
 	fmt.Println("Welcome to the NATS Core publisher!")
-	flag.Parse()
-	args := flag.Args()
-	subject := args[0]
 
 	// Connect to a server
 	nc, err := nats.Connect(nats.DefaultURL)

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"flag"
+	"fmt"
 	"log"
 	"time"
 
@@ -11,26 +11,38 @@ import (
 )
 
 const maxMessages = 500
+const streamName = "payments"
 
 func main() {
 	log.Println("Welcome to the NATS JetStream publisher!")
-	flag.Parse()
-	args := flag.Args()
-	log.Println(args)
-	subject := args[0]
-
 	// Connect to a server
 	nc, err := nats.Connect(nats.DefaultURL)
 	if err != nil {
 		log.Fatal("error connecting to NATS Server", err)
 	}
-	log.Printf("publisher %s is publishing on %s\n", uuid.New(), subject)
 
 	// Create JetStream Context
 	js, err := nc.JetStream()
 	if err != nil {
-		log.Fatal("error creating JetStream Context", err)
+		log.Fatal("error creating jetstream context:", err)
 	}
+	
+	// Create a Stream
+	if _, err = js.AddStream(&nats.StreamConfig{
+		Name:     streamName,
+		Subjects: []string{fmt.Sprintf("%s.*", streamName)},
+	}); err != nil {
+		log.Fatal("error adding stream:", err)
+	}
+
+	//Cleanup
+	defer func() {
+		// Delete Stream
+		js.DeleteStream(streamName)
+	}()
+
+	subject := "payments.uk"
+	log.Printf("publisher %s is publishing on %s\n", uuid.New(), subject)
 
 	// Simple Stream Publisher
 	for i := 0; i < maxMessages; i++ {

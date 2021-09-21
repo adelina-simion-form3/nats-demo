@@ -27,7 +27,7 @@ func main() {
 	// Create JetStream Context
 	js, err := nc.JetStream()
 	if err != nil {
-		log.Fatal("error creating JetStream Context", err)
+		log.Fatal("error creating jetstream Context: ", err)
 	}
 
 	var scount int
