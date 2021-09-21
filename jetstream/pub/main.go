@@ -12,11 +12,13 @@ import (
 
 const maxMessages = 500
 const streamName = "payments"
+// FOR DEMO to not clash on default port 
+const jetstreamURL = "nats://127.0.0.1:5222"
 
 func main() {
 	log.Println("Welcome to the NATS JetStream publisher!")
 	// Connect to a server
-	nc, err := nats.Connect(nats.DefaultURL)
+	nc, err := nats.Connect(jetstreamURL)
 	if err != nil {
 		log.Fatal("error connecting to NATS Server", err)
 	}
@@ -26,7 +28,7 @@ func main() {
 	if err != nil {
 		log.Fatal("error creating jetstream context:", err)
 	}
-	
+
 	// Create a Stream
 	if _, err = js.AddStream(&nats.StreamConfig{
 		Name:     streamName,
@@ -38,7 +40,9 @@ func main() {
 	//Cleanup
 	defer func() {
 		// Delete Stream
-		js.DeleteStream(streamName)
+		if err := js.DeleteStream(streamName); err != nil {
+			log.Fatal("error deleting stream:", err)
+		}
 	}()
 
 	subject := "payments.uk"
@@ -49,7 +53,9 @@ func main() {
 		p := models.GetRandomPayment()
 		log.Printf("[%d] publishing on %s:%s\n", i, subject, p)
 
-		js.Publish(subject, []byte(p))
+		if _, err := js.Publish(subject, []byte(p)); err != nil {
+			log.Fatal("error publishing:", err)
+		}
 		time.Sleep(2 * time.Second)
 	}
 }

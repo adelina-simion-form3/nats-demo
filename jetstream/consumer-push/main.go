@@ -9,6 +9,9 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
+// FOR DEMO to not clash on default port 
+const jetstreamURL = "nats://127.0.0.1:5222"
+
 func main() {
 	log.Println("Welcome to the NATS JetStream consumer!")
 	flag.Parse()
@@ -18,11 +21,11 @@ func main() {
 	}
 	subject := args[0]
 
-	nc, err := nats.Connect(nats.DefaultURL)
+	nc, err := nats.Connect(jetstreamURL)
 	if err != nil {
 		log.Fatal("error connecting to NATS Server", err)
 	}
-	log.Printf("push Consumer %s is listening on %s\n", uuid.New(), subject)
+	log.Printf("push consumer %s is listening on %s\n", uuid.New(), subject)
 
 	// Create JetStream Context
 	js, err := nc.JetStream()

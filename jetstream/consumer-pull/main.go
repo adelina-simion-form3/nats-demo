@@ -9,6 +9,9 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
+// FOR DEMO to not clash on default port
+const jetstreamURL = "nats://127.0.0.1:5222"
+
 func main() {
 	log.Println("Welcome to the NATS JetStream consumer!")
 	flag.Parse()
@@ -18,11 +21,11 @@ func main() {
 	}
 	subject := args[0]
 
-	nc, err := nats.Connect(nats.DefaultURL)
+	nc, err := nats.Connect(jetstreamURL)
 	if err != nil {
-		log.Fatal("error connecting to NATS server", err)
+		log.Fatal("error connecting to nats server:", err)
 	}
-	log.Printf("pull Consumer %s is listening on %s\n", uuid.New(), subject)
+	log.Printf("pull consumer %s is listening on %s\n", uuid.New(), subject)
 
 	// Create JetStream Context
 	js, err := nc.JetStream()
@@ -30,18 +33,23 @@ func main() {
 		log.Fatal("error creating jetstream context", err)
 	}
 
-	var scount int
-	// Ask around what these strings are defined as - should be regular or durable
+	var messageCount int
+	// MONITOR consumer without any acknowledgement
 	sub, err := js.PullSubscribe(subject, "MONITOR")
 	if err != nil {
 		log.Fatal("error creating pull subscriber", err)
 	}
+
 	// Cleanup
 	defer func() {
 		// Unsubscribe
-		sub.Unsubscribe()
+		if err := sub.Unsubscribe(); err != nil {
+			log.Fatal("error unsubscribing from stream:", err)
+		}
 		// Drain
-		sub.Drain()
+		if err := sub.Drain(); err != nil {
+			log.Fatal("error draining from stream:", err)
+		}
 	}()
 
 	for {
@@ -50,8 +58,8 @@ func main() {
 			log.Fatal("error fetching message from pull subscriber", err)
 		}
 		for _, m := range msgs {
-			scount++
-			log.Printf("[%d] received from %s: %s\n", scount, m.Subject, string(m.Data))
+			messageCount++
+			log.Printf("[%d] received from %s: %s\n", messageCount, m.Subject, string(m.Data))
 		}
 		// Poll every 2 second
 		time.Sleep(2 * time.Second)

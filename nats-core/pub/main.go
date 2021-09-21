@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -14,7 +13,7 @@ const maxMessages = 500
 const subject = "payments.uk"
 
 func main() {
-	fmt.Println("Welcome to the NATS Core publisher!")
+	log.Println("Welcome to the NATS Core publisher!")
 
 	// Connect to a server
 	nc, err := nats.Connect(nats.DefaultURL)
@@ -28,7 +27,9 @@ func main() {
 		p := models.GetRandomPayment()
 		log.Printf("[%d] publishing on %s:%s\n", i, subject, p)
 
-		nc.Publish(subject, []byte(p))
+		if err := nc.Publish(subject, []byte(p)); err != nil {
+			log.Fatal("error publishing:", err)
+		}
 		time.Sleep(2 * time.Second)
 	}
 }
