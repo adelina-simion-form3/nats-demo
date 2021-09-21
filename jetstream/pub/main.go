@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"time"
 
@@ -14,9 +13,10 @@ import (
 const maxMessages = 500
 
 func main() {
-	fmt.Println("Welcome to the NATS Core publisher!")
+	log.Println("Welcome to the NATS JetStream publisher!")
 	flag.Parse()
 	args := flag.Args()
+	log.Println(args)
 	subject := args[0]
 
 	// Connect to a server
@@ -26,12 +26,18 @@ func main() {
 	}
 	log.Printf("publisher %s is publishing on %s\n", uuid.New(), subject)
 
-	// Publish up to max messages every 2 seconds
+	// Create JetStream Context
+	js, err := nc.JetStream()
+	if err != nil {
+		log.Fatal("error creating JetStream Context", err)
+	}
+
+	// Simple Stream Publisher
 	for i := 0; i < maxMessages; i++ {
 		p := models.GetRandomPayment()
 		log.Printf("[%d] publishing on %s:%s\n", i, subject, p)
 
-		nc.Publish(subject, []byte(p))
+		js.Publish(subject, []byte(p))
 		time.Sleep(2 * time.Second)
 	}
 }
