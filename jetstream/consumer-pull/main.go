@@ -33,24 +33,11 @@ func main() {
 		log.Fatal("error creating jetstream context", err)
 	}
 
-	var messageCount int
-	// MONITOR consumer without any acknowledgement
+	// MONITOR consumer without any acknowledgement; see docs for other options
 	sub, err := js.PullSubscribe(subject, "MONITOR")
 	if err != nil {
 		log.Fatal("error creating pull subscriber", err)
 	}
-
-	// Cleanup
-	defer func() {
-		// Unsubscribe
-		if err := sub.Unsubscribe(); err != nil {
-			log.Fatal("error unsubscribing from stream:", err)
-		}
-		// Drain
-		if err := sub.Drain(); err != nil {
-			log.Fatal("error draining from stream:", err)
-		}
-	}()
 
 	for {
 		msgs, err := sub.Fetch(3)
@@ -58,10 +45,9 @@ func main() {
 			log.Fatal("error fetching message from pull subscriber", err)
 		}
 		for _, m := range msgs {
-			messageCount++
-			log.Printf("[%d] received from %s: %s\n", messageCount, m.Subject, string(m.Data))
+			log.Printf("Received from %s: %s\n", m.Subject, string(m.Data))
 		}
-		// Poll every 2 second
-		time.Sleep(2 * time.Second)
+		// Poll every 5 second
+		time.Sleep(5 * time.Second)
 	}
 }

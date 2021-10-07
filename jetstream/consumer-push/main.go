@@ -9,7 +9,7 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-// FOR DEMO to not clash on default port 
+// FOR DEMO to not clash on default port
 const jetstreamURL = "nats://127.0.0.1:5222"
 
 func main() {
@@ -33,11 +33,10 @@ func main() {
 		log.Fatal("error creating jetstream Context: ", err)
 	}
 
-	var scount int
 	js.Subscribe(subject, func(m *nats.Msg) {
-		scount++
-		log.Printf("[%d] received from %s: %s\n", scount, m.Subject, string(m.Data))
+		log.Printf("Received from %s: %s\n", m.Subject, string(m.Data))
 	})
-
+	
+	// Exit the main goroutine but allow subscribe to continue running
 	runtime.Goexit()
 }
